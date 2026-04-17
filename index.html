@@ -194,6 +194,23 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 
 @media(max-width:680px){.shell{grid-template-columns:1fr;}.sidebar{position:static;height:auto;}}
 
+/* ── STUDY BAR (racha + frase) ── */
+.study-bar{display:flex;align-items:center;gap:16px;background:white;border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:18px;}
+.streak-block{display:flex;align-items:center;gap:7px;flex-shrink:0;padding-right:16px;border-right:1px solid var(--line);}
+.streak-flame{font-size:22px;line-height:1;filter:drop-shadow(0 1px 3px rgba(200,75,47,.35));}
+.streak-flame.cold{filter:grayscale(1);opacity:.4;}
+.streak-num{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;color:var(--ink);line-height:1;}
+.streak-meta{display:flex;flex-direction:column;line-height:1.2;}
+.streak-label{font-size:10px;color:var(--ink3);font-family:'DM Mono',monospace;letter-spacing:.04em;}
+.streak-sub{font-size:9px;color:var(--ink3);}
+.quote-block{flex:1;display:flex;align-items:center;gap:10px;min-width:0;}
+.quote-text{font-size:12px;color:var(--ink2);font-style:italic;line-height:1.45;flex:1;}
+.quote-text strong{color:var(--ink);font-style:normal;}
+.quote-next{background:none;border:1px solid var(--line);border-radius:5px;width:24px;height:24px;cursor:pointer;color:var(--ink3);font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;}
+.quote-next:hover{background:var(--bg2);color:var(--ink);border-color:var(--ink3);}
+@keyframes quoteIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.quote-text.anim{animation:quoteIn .3s ease;}
+
 /* ── LOADING & ANIMATIONS ── */
 @keyframes spin{to{transform:rotate(360deg);}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
@@ -335,6 +352,22 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
       <h2 id="main-title">Calendario de estudio</h2>
       <p>Clic en un día para editar · Marca temas en la barra lateral · Los repasos se registran en la tabla</p>
     </div>
+    <!-- STUDY BAR -->
+    <div class="study-bar">
+      <div class="streak-block">
+        <span class="streak-flame" id="streak-flame">🔥</span>
+        <span class="streak-num" id="streak-num">0</span>
+        <div class="streak-meta">
+          <span class="streak-label">días de racha</span>
+          <span class="streak-sub" id="streak-sub">Empieza hoy</span>
+        </div>
+      </div>
+      <div class="quote-block">
+        <span class="quote-text" id="quote-text"></span>
+        <button class="quote-next" onclick="nextQuote()" title="Otra frase">↻</button>
+      </div>
+    </div>
+
     <div class="view-toggle">
       <button class="vtab active" onclick="switchView('calendar')">Calendario</button>
       <button class="vtab"        onclick="switchView('stats')">Estadísticas</button>
@@ -645,13 +678,24 @@ function renderSetupSubject(idx) {
       style="background:${p.color}"
       onclick="setupSetColor(${idx},${ci})"></div>`).join('');
   div.innerHTML = `
-    <div class="subj-setup-row">
+    <div style="display:grid;grid-template-columns:1fr 100px;gap:4px;margin-bottom:3px;">
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)">Nombre</div>
+      <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3)">Abrev.</div>
+    </div>
+    <div class="subj-setup-row" style="grid-template-columns:1fr 100px 1fr auto;margin-bottom:6px">
       <input type="text" placeholder="Nombre de la asignatura" value="${row.name}"
         oninput="setupRows[${idx}].name=this.value;autoShort(${idx})"/>
       <input type="text" placeholder="Abrev." value="${row.short}"
         id="sshort-${idx}" oninput="setupRows[${idx}].short=this.value"/>
-      <input type="date" value="${row.examDate}"
-        onchange="setupRows[${idx}].examDate=this.value"/>
+      <div>
+        <div style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px;">
+          Fecha del examen <span style="color:var(--accent)">*</span>
+        </div>
+        <input type="date" value="${row.examDate}" required
+          style="width:100%;border:1px solid ${row.examDate?'var(--line)':'#E8A020'};border-radius:5px;padding:7px 9px;font-family:inherit;font-size:12px;background:white;color:var(--ink);outline:none;"
+          onchange="setupRows[${idx}].examDate=this.value;this.style.borderColor='var(--line)'"
+          title="Necesaria para mostrar el examen en el calendario"/>
+      </div>
       <button class="sbtn-rm" onclick="removeSetupSubject(${idx})">✕</button>
     </div>
     <div class="color-dots" id="sdots-${idx}">${colorDots}</div>
@@ -683,6 +727,11 @@ function removeSetupSubject(idx) {
 
 function finishSetup() {
   if (setupRows.length === 0) { alert('Añade al menos una asignatura'); return; }
+  const sinFecha = setupRows.filter(r => !r.examDate);
+  if (sinFecha.length > 0) {
+    alert(`Faltan fechas de examen en: ${sinFecha.map(r=>r.name||'asignatura sin nombre').join(', ')}\n\nLa fecha del examen es necesaria para mostrarla en el calendario.`);
+    return;
+  }
   CFG = {
     name: $('s-name').value.trim(),
     startDate: $('s-start').value,
@@ -714,6 +763,9 @@ function initApp() {
   renderMainStats();
   renderRepasoTable();
   renderLegend();
+  renderStreak();
+  renderQuote();
+  resetQuoteTimer();
 }
 
 // ─── SIDEBAR ───
@@ -770,6 +822,7 @@ function cycleTema(e, key, idx) {
   if (S.temas[key][idx]==='reviewing'||S.temas[key][idx]==='known') {
     S.repasos[key][idx] = (S.repasos[key][idx]||0)+1;
   }
+  checkAndUpdateStreak();
   saveAll();
   renderSidebar();
   renderMainStats();
@@ -1166,6 +1219,7 @@ function switchSidebar(tab){
 
 // ─── EXPOSE GLOBALS ───
 window.setBtnLoading=setBtnLoading;
+window.nextQuote=nextQuote;
 window.regenerateWords=regenerateWords;
 window.copyWords=copyWords;
 window.doRegister=doRegister;
@@ -1187,6 +1241,113 @@ window.toggleDayPlan=toggleDayPlan;
 window.setExamBtn=setExamBtn;
 window.openSetupFromSidebar=openSetupFromSidebar;
 window.setupRows=setupRows;
+
+// ─── FRASES MOTIVACIONALES ───
+const QUOTES = [
+  { text: 'El único lugar donde el éxito viene antes que el trabajo es en el diccionario.', author: 'Vidal Sassoon' },
+  { text: 'Cada página que estudias hoy es una respuesta que tendrás mañana.' },
+  { text: 'Qué privilegio tan enorme poder aprender. Hay millones que darían cualquier cosa por esta oportunidad.' },
+  { text: 'No tienes que ser brillante para empezar, pero tienes que empezar para ser brillante.' },
+  { text: 'El cansancio de hoy es el orgullo de mañana.' },
+  { text: 'Eres de las pocas personas en la historia de la humanidad que tiene acceso a este conocimiento. <strong>No lo desperdicies.</strong>' },
+  { text: 'Un día difícil de estudio es infinitamente mejor que un día fácil de arrepentimiento.' },
+  { text: 'La pereza es cara. La pagas con intereses el día del examen.' },
+  { text: 'Estudiar no es un castigo, es el superpoder más accesible que existe.' },
+  { text: 'Cada vez que te da pereza, recuerda por qué empezaste.' },
+  { text: 'El conocimiento que adquieres hoy nadie te lo puede quitar jamás.' },
+  { text: 'No se trata de tener tiempo, se trata de hacerlo.' },
+  { text: 'Dentro de un año desearías haber empezado hoy.' },
+  { text: 'La disciplina es elegir entre lo que quieres ahora y lo que más quieres.' },
+  { text: 'Hay personas que estudian con el 10% de los recursos que tienes tú y llegan muy lejos. <strong>Imagina lo que puedes hacer tú.</strong>' },
+  { text: 'El cerebro es el único músculo que mejora cuanto más lo usas sin descanso.' },
+  { text: 'No necesitas motivación para empezar. Necesitas empezar para tener motivación.' },
+  { text: 'Pequeños progresos diarios llevan a resultados sorprendentes.' },
+  { text: 'El examen no mide tu inteligencia, mide tu preparación. Y eso sí puedes controlarlo.' },
+  { text: 'Estudias porque puedes, porque quieres y porque te lo mereces.' },
+  { text: 'La diferencia entre quien consigue y quien no consigue es lo que hace cuando no tiene ganas.' },
+  { text: 'Un 1% mejor cada día es un 37x mejor en un año.' },
+  { text: 'Tu yo del futuro ya te está agradeciendo lo que estás haciendo ahora mismo.' },
+  { text: 'No hay atajo para el conocimiento real, pero el camino vale cada paso.' },
+  { text: 'Hoy no tienes que estudiar todo. Solo tienes que estudiar <strong>algo</strong>.' },
+  { text: 'La universidad no es para siempre. El conocimiento, sí.' },
+  { text: 'Cada tema que marcas como dominado es una victoria pequeña y real.' },
+  { text: 'Tus padres, tus profesores, mucha gente ha apostado por ti. Ahora apuesta tú.' },
+  { text: 'El aburrimiento de estudiar dura horas. El orgullo de haberlo hecho, años.' },
+  { text: 'Hay días en que el único superpoder que necesitas es sentarte y abrir el libro.' },
+];
+
+let currentQuoteIdx = Math.floor(Math.random() * QUOTES.length);
+let quoteRotateTimer = null;
+
+function renderQuote() {
+  const el = $('quote-text');
+  const q = QUOTES[currentQuoteIdx];
+  el.innerHTML = q.author
+    ? `${q.text} <span style="color:var(--ink3);font-style:normal;font-size:10px;font-family:'DM Mono',monospace">— ${q.author}</span>`
+    : q.text;
+  el.classList.remove('anim');
+  void el.offsetWidth;
+  el.classList.add('anim');
+}
+
+function nextQuote() {
+  currentQuoteIdx = (currentQuoteIdx + 1) % QUOTES.length;
+  renderQuote();
+  resetQuoteTimer();
+}
+
+function resetQuoteTimer() {
+  clearInterval(quoteRotateTimer);
+  quoteRotateTimer = setInterval(nextQuote, 18000);
+}
+
+// ─── RACHA (STREAK) ───
+function calcStreak() {
+  if (!S.streak) S.streak = { count: 0, lastDate: '' };
+}
+
+function checkAndUpdateStreak() {
+  calcStreak();
+  const today = todayStr();
+  if (S.streak.lastDate === today) return; // ya contado hoy
+
+  const prev = new Date(today + 'T00:00:00');
+  prev.setDate(prev.getDate() - 1);
+  const yesterday = prev.toISOString().slice(0,10);
+
+  if (S.streak.lastDate === yesterday) {
+    S.streak.count = (S.streak.count || 0) + 1;
+  } else {
+    S.streak.count = 1; // racha rota o primera vez
+  }
+  S.streak.lastDate = today;
+  saveAll();
+  renderStreak();
+}
+
+function renderStreak() {
+  calcStreak();
+  const count = S.streak.count || 0;
+  $('streak-num').textContent = count;
+
+  const flame = $('streak-flame');
+  if (count === 0) {
+    flame.classList.add('cold');
+    $('streak-sub').textContent = 'Empieza hoy';
+  } else if (count < 3) {
+    flame.classList.remove('cold');
+    $('streak-sub').textContent = '¡Sigue así!';
+  } else if (count < 7) {
+    flame.classList.remove('cold');
+    $('streak-sub').textContent = '🌱 En racha';
+  } else if (count < 14) {
+    flame.classList.remove('cold');
+    $('streak-sub').textContent = '⚡ Imparable';
+  } else {
+    flame.classList.remove('cold');
+    $('streak-sub').textContent = '🏆 Legendario';
+  }
+}
 
 // ─── BOOT ───
 function hideBootLoader() {
