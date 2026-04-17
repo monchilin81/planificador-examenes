@@ -388,7 +388,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 import { WORDS } from './words_es.js';
 
 // ─── CONFIG ───
-const API = 'http://localhost:3001';
+const API = window.location.hostname === 'localhost' ? 'http://localhost:3001' : '';
 
 const PRESET_COLORS = [
   {color:'#C84B2F',bg:'#FDF0EC'},{color:'#B5362B',bg:'#FDF0EE'},
