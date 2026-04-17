@@ -26,8 +26,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .lbtn-ghost{flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#9A9790;padding:7px 12px;border-radius:5px;font-family:inherit;font-size:11px;cursor:pointer;transition:all .15s;}
 .lbtn-ghost:hover{background:rgba(255,255,255,.1);color:#F5F2EB;}
 .warn-box{background:rgba(200,160,30,.08);border:1px solid rgba(200,160,30,.2);border-radius:6px;padding:9px 12px;font-size:11px;color:#C8A030;margin-bottom:12px;line-height:1.5;}
-.lbtn-primary{width:100%;background:var(--accent);color:white;padding:11px;border-radius:6px;border:none;font-family:inherit;font-weight:500;font-size:13px;cursor:pointer;transition:background .15s;}
-.lbtn-primary:hover{background:#A83820;}
+.lbtn-primary{width:100%;background:var(--accent);color:white;padding:11px;border-radius:6px;border:none;font-family:inherit;font-weight:500;font-size:13px;cursor:pointer;transition:background .15s,opacity .15s;}
+.lbtn-primary:hover:not(:disabled){background:#A83820;}
+.lbtn-new-toggle{width:100%;background:transparent;border:1px solid rgba(255,255,255,.1);color:#6A6760;padding:10px 14px;border-radius:7px;font-family:inherit;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:all .2s;}
+.lbtn-new-toggle:hover{border-color:rgba(255,255,255,.2);color:#9A9790;}
 .linput{width:100%;background:#0F0E0C;border:1px solid rgba(255,255,255,.1);border-radius:6px;padding:11px 14px;color:#F5F2EB;font-family:'DM Mono',monospace;font-size:14px;letter-spacing:.03em;margin-bottom:8px;outline:none;transition:border-color .15s;}
 .linput:focus{border-color:rgba(200,74,47,.5);}
 .linput.lerr{border-color:rgba(200,74,47,.8);}
@@ -324,27 +326,10 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
       <p>Tu calendario de estudio</p>
     </div>
 
-    <form id="register-form" autocomplete="on" onsubmit="event.preventDefault(); doRegister()">
-      <input type="text" name="username" autocomplete="username" id="reg-username-field"
-             style="position:fixed;top:-9999px;opacity:0;pointer-events:none;" tabindex="-1" aria-hidden="true">
-      <input type="password" name="password" autocomplete="new-password" id="reg-pw-field"
-             style="position:fixed;top:-9999px;opacity:0;pointer-events:none;" tabindex="-1" aria-hidden="true">
-      <div class="lsection-label">Crear cuenta nueva</div>
-      <div class="words-box" id="new-words">cargando…</div>
-      <div class="words-btns">
-        <button type="button" class="lbtn-ghost" onclick="regenerateWords()">↺ Regenerar</button>
-        <button type="button" class="lbtn-ghost" onclick="copyWords()">⧉ Copiar</button>
-      </div>
-      <div class="warn-box">Guarda estas palabras. Son tu única contraseña y <strong>no se pueden recuperar</strong>. Quien las tenga puede acceder a tu cuenta.</div>
-      <button type="submit" class="lbtn-primary">Crear cuenta con estas palabras →</button>
-    </form>
-
-    <div class="lsep"><span>o si ya tienes cuenta</span></div>
-
+    <!-- ACCEDER — sección principal -->
     <form id="login-form" autocomplete="on" onsubmit="event.preventDefault(); doLogin()">
       <input type="text" name="username" autocomplete="username" id="login-username-field"
              style="position:fixed;top:-9999px;opacity:0;pointer-events:none;" tabindex="-1" aria-hidden="true">
-      <div class="lsection-label">Acceder</div>
       <div style="position:relative;">
         <input type="password" class="linput" id="login-input" name="password"
           placeholder="palabra1-palabra2-palabra3-palabra4"
@@ -355,8 +340,42 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
       </div>
       <div id="word-count-hint"></div>
       <div id="login-error" class="lerrmsg hidden"></div>
-      <button type="submit" class="lbtn-primary">Entrar →</button>
+      <button type="submit" class="lbtn-primary" style="margin-top:4px;">Entrar →</button>
     </form>
+
+    <!-- CREAR CUENTA — colapsable -->
+    <div style="margin-top:20px;">
+      <button type="button" class="lbtn-new-toggle" id="toggle-register-btn" onclick="toggleRegisterSection()">
+        <span>¿Primera vez? Crear cuenta nueva</span>
+        <span id="toggle-register-arrow" style="transition:transform .25s;display:inline-block;">▾</span>
+      </button>
+
+      <div id="register-section" style="overflow:hidden;max-height:0;opacity:0;transition:max-height .35s ease,opacity .25s ease;">
+        <form id="register-form" autocomplete="on" onsubmit="event.preventDefault(); doRegister()" style="padding-top:16px;">
+          <input type="text" name="username" autocomplete="username" id="reg-username-field"
+                 style="position:fixed;top:-9999px;opacity:0;pointer-events:none;" tabindex="-1" aria-hidden="true">
+          <input type="password" name="password" autocomplete="new-password" id="reg-pw-field"
+                 style="position:fixed;top:-9999px;opacity:0;pointer-events:none;" tabindex="-1" aria-hidden="true">
+          <div class="lsection-label" style="margin-bottom:8px;">Tu contraseña son estas 4 palabras</div>
+          <div class="words-box" id="new-words">cargando…</div>
+          <div class="words-btns">
+            <button type="button" class="lbtn-ghost" onclick="regenerateWords()">↺ Regenerar</button>
+            <button type="button" class="lbtn-ghost" onclick="copyWords()">⧉ Copiar</button>
+          </div>
+
+          <!-- Confirmación obligatoria -->
+          <label id="reg-confirm-label" style="display:flex;align-items:flex-start;gap:10px;background:rgba(200,75,47,.07);border:1px solid rgba(200,75,47,.25);border-radius:7px;padding:11px 12px;margin-bottom:12px;cursor:pointer;user-select:none;">
+            <input type="checkbox" id="reg-confirm-check" onchange="onRegConfirmChange()" style="margin-top:2px;flex-shrink:0;accent-color:var(--accent);width:15px;height:15px;cursor:pointer;">
+            <span style="font-size:11px;color:#C5A090;line-height:1.5;">He guardado estas palabras en un lugar seguro. <strong style="color:#E8A090;">Si las pierdo no hay forma de recuperar mi cuenta.</strong></span>
+          </label>
+
+          <button type="submit" id="reg-submit-btn" class="lbtn-primary" disabled
+            style="opacity:.4;cursor:not-allowed;">
+            Crear cuenta →
+          </button>
+        </form>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -646,7 +665,7 @@ function setBtnLoading(btn, loading) {
 }
 
 async function doRegister() {
-  const btn = document.querySelector('#register-form .lbtn-primary');
+  const btn = document.getElementById('reg-submit-btn');
   setBtnLoading(btn, true);
   const words = currentWords.join('-');
   const userId = await hashWords(words);
@@ -712,11 +731,17 @@ function showLogin() {
   $('login-screen').classList.remove('hidden');
   $('setup-screen').classList.add('hidden');
   $('app-screen').classList.add('hidden');
-  // Reset any button loading states left from a previous session
-  const regBtn = document.querySelector('#register-form .lbtn-primary');
+  // Reset button loading states
   const loginBtn = document.querySelector('#login-form .lbtn-primary');
-  if (regBtn) { regBtn.disabled = false; regBtn.textContent = 'Crear cuenta con estas palabras →'; }
   if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Entrar →'; }
+  // Collapse register section and reset checkbox
+  const section = document.getElementById('register-section');
+  const arrow = document.getElementById('toggle-register-arrow');
+  if (section) { section.style.maxHeight = '0'; section.style.opacity = '0'; }
+  if (arrow) arrow.style.transform = 'rotate(0deg)';
+  const check = document.getElementById('reg-confirm-check');
+  if (check) check.checked = false;
+  window.onRegConfirmChange && window.onRegConfirmChange();
   $('login-input').value = '';
   $('word-count-hint').textContent = '';
   $('login-error').classList.add('hidden');
@@ -1490,6 +1515,29 @@ window.toggleModalSec=toggleModalSec;
 window.toggleDayPlan=toggleDayPlan;
 window.setExamBtn=setExamBtn;
 window.openSetupFromSidebar=openSetupFromSidebar;
+window.toggleRegisterSection = function() {
+  const section = document.getElementById('register-section');
+  const arrow = document.getElementById('toggle-register-arrow');
+  const isOpen = section.style.maxHeight !== '0px' && section.style.maxHeight !== '';
+  if (isOpen) {
+    section.style.maxHeight = '0';
+    section.style.opacity = '0';
+    arrow.style.transform = 'rotate(0deg)';
+  } else {
+    section.style.maxHeight = section.scrollHeight + 200 + 'px';
+    section.style.opacity = '1';
+    arrow.style.transform = 'rotate(180deg)';
+  }
+};
+
+window.onRegConfirmChange = function() {
+  const checked = document.getElementById('reg-confirm-check').checked;
+  const btn = document.getElementById('reg-submit-btn');
+  btn.disabled = !checked;
+  btn.style.opacity = checked ? '1' : '.4';
+  btn.style.cursor = checked ? 'pointer' : 'not-allowed';
+};
+
 window.toggleLoginVisibility = function() {
   const inp = $('login-input'), btn = $('login-eye');
   const isHidden = inp.type === 'password';
