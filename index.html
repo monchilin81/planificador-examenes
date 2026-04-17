@@ -91,8 +91,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .tema-row.reviewing .tema-label{color:#E8C870;}
 .tema-hint{font-size:8.5px;color:#555;margin-top:3px;padding:0 5px;}
 .sb-stat{background:rgba(255,255,255,.04);border-radius:7px;padding:9px 10px;border:1px solid rgba(255,255,255,.07);}
-.sb-logout{background:none;border:1px solid rgba(255,255,255,.1);color:#6A6760;padding:7px 12px;border-radius:6px;font-family:inherit;font-size:11px;cursor:pointer;width:100%;transition:all .15s;margin-top:auto;}
+.sb-logout{background:none;border:1px solid rgba(255,255,255,.1);color:#6A6760;padding:7px 12px;border-radius:6px;font-family:inherit;font-size:11px;cursor:pointer;width:100%;transition:all .15s;margin-top:6px;}
 .sb-logout:hover{border-color:#C84B2F;color:#C84B2F;}
+.sb-words-btn{background:none;border:1px solid rgba(255,255,255,.08);color:#6A6760;padding:7px 12px;border-radius:6px;font-family:inherit;font-size:11px;cursor:pointer;width:100%;transition:all .15s;text-align:left;}
+.sb-words-btn:hover{border-color:rgba(255,255,255,.2);color:#9A9790;}
+.sb-words-copy{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#9A9790;padding:5px 10px;border-radius:5px;font-family:'DM Mono',monospace;font-size:10px;cursor:pointer;width:100%;transition:all .15s;}
+.sb-words-copy:hover{background:rgba(255,255,255,.12);color:#F5F2EB;}
 .sidebar::-webkit-scrollbar{width:3px;}
 .sidebar::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:2px;}
 
@@ -399,6 +403,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
     </div>
     <div id="sidebar-subjects" class="subj-list"></div>
     <div id="sidebar-stats" style="display:none;flex-direction:column;gap:7px;"></div>
+    <div id="sb-words-wrap" style="margin-top:auto;">
+      <button class="sb-words-btn" onclick="toggleShowWords()">🔑 <span id="sb-words-btn-label">Ver mis palabras</span></button>
+      <div id="sb-words-box" class="hidden" style="margin-top:6px;background:#0F0E0C;border:1px solid rgba(255,255,255,.1);border-radius:7px;padding:10px 12px;">
+        <div style="font-family:'DM Mono',monospace;font-size:11px;font-weight:500;color:#F5F2EB;word-break:break-all;line-height:1.6;margin-bottom:8px;" id="sb-words-val"></div>
+        <button class="sb-words-copy" onclick="copySessionWords()">⧉ Copiar</button>
+      </div>
+    </div>
     <button class="sb-logout" onclick="doLogout()">Cerrar sesión</button>
     <div class="credit">Ideado por <a href="https://www.linkedin.com/in/martaortegoh/" target="_blank" rel="noopener">Marta Ortego</a></div>
   </aside>
@@ -1402,6 +1413,31 @@ function switchSidebar(tab){
   document.querySelectorAll('.nav-tab').forEach((t,i)=>t.classList.toggle('active',['subjects','stats'][i]===tab));
 }
 
+// ─── PALABRAS DE ACCESO ───
+function toggleShowWords() {
+  const box = $('sb-words-box');
+  const lbl = $('sb-words-btn-label');
+  const isHidden = box.classList.contains('hidden');
+  box.classList.toggle('hidden', !isHidden);
+  if (isHidden) {
+    const ses = getSession();
+    $('sb-words-val').textContent = ses ? ses.words : '—';
+    lbl.textContent = 'Ocultar palabras';
+  } else {
+    lbl.textContent = 'Ver mis palabras';
+  }
+}
+
+function copySessionWords() {
+  const ses = getSession();
+  if (!ses) return;
+  navigator.clipboard.writeText(ses.words).then(() => {
+    const btn = document.querySelector('.sb-words-copy');
+    btn.textContent = '✓ Copiado';
+    setTimeout(() => { btn.textContent = '⧉ Copiar'; }, 1800);
+  });
+}
+
 // ─── EXPOSE GLOBALS ───
 window.setBtnLoading=setBtnLoading;
 window.nextQuote=nextQuote;
@@ -1425,6 +1461,8 @@ window.toggleModalSec=toggleModalSec;
 window.toggleDayPlan=toggleDayPlan;
 window.setExamBtn=setExamBtn;
 window.openSetupFromSidebar=openSetupFromSidebar;
+window.toggleShowWords=toggleShowWords;
+window.copySessionWords=copySessionWords;
 window.setupRows=setupRows;
 
 // ─── MOBILE ───
