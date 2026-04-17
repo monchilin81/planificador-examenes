@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Planificador de Exámenes</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%231A1915'/><rect x='6' y='11' width='20' height='15' rx='2.5' fill='%23F5F2EB'/><rect x='6' y='11' width='20' height='6' rx='2' fill='%23C84B2F'/><rect x='10' y='6' width='2.5' height='7' rx='1.25' fill='%23C84B2F'/><rect x='19.5' y='6' width='2.5' height='7' rx='1.25' fill='%23C84B2F'/><rect x='10' y='21' width='3' height='2.5' rx='1' fill='%23C84B2F'/><rect x='14.5' y='21' width='3' height='2.5' rx='1' fill='%239A9790'/><rect x='19' y='21' width='3' height='2.5' rx='1' fill='%239A9790'/></svg>">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F5F2EB;--bg2:#EDEAE0;--bg3:#E3DFD3;--ink:#1A1915;--ink2:#5A5750;--ink3:#9A9790;--accent:#C84B2F;--accent2:#E8A020;--line:#D5D1C5;}
@@ -292,6 +293,18 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .credit{font-size:10px;color:#4A4740;text-align:center;padding:10px 0 4px;font-family:'DM Mono',monospace;letter-spacing:.04em;}
 .credit a{color:#6A6760;text-decoration:none;border-bottom:1px solid rgba(255,255,255,.12);transition:color .15s;}
 .credit a:hover{color:#C5C2B8;}
+
+/* ── LANDING ANIMATIONS ── */
+@keyframes logoLabelIn{from{opacity:0;letter-spacing:.4em;}to{opacity:1;letter-spacing:.18em;}}
+@keyframes logoTitleIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+@keyframes cardIn{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.lcard{animation:cardIn .45s ease both;}
+.llogo h1{animation:logoLabelIn .7s ease both;}
+.llogo p{animation:logoTitleIn .5s ease .3s both;}
+
+/* Copy flash on words-box */
+@keyframes wordsCopied{0%{background:#0F0E0C;color:#F5F2EB;box-shadow:none;}50%{background:#0D2419;color:#4ABA7A;box-shadow:0 0 0 2px #2E7D5A44;}100%{background:#0F0E0C;color:#F5F2EB;box-shadow:none;}}
+.words-box.flash-copied{animation:wordsCopied .55s ease;}
 </style>
 </head>
 <body>
@@ -360,7 +373,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
           <div class="words-box" id="new-words">cargando…</div>
           <div class="words-btns">
             <button type="button" class="lbtn-ghost" onclick="regenerateWords()">↺ Regenerar</button>
-            <button type="button" class="lbtn-ghost" onclick="copyWords()">⧉ Copiar</button>
+            <button type="button" class="lbtn-ghost" id="copy-words-btn" onclick="copyWords(this)">⧉ Copiar</button>
           </div>
 
           <!-- Confirmación obligatoria -->
@@ -649,8 +662,22 @@ function regenerateWords() {
   if (regUser) regUser.value = w;
 }
 
-function copyWords() {
+function copyWords(btn) {
   navigator.clipboard.writeText(currentWords.join('-'));
+  // Flash the words box
+  const box = $('new-words');
+  box.classList.remove('flash-copied');
+  void box.offsetWidth; // reflow to restart animation
+  box.classList.add('flash-copied');
+  setTimeout(() => box.classList.remove('flash-copied'), 600);
+  // Button feedback
+  if (btn) {
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copiado';
+    btn.style.color = '#4ABA7A';
+    btn.style.borderColor = '#2E7D5A44';
+    setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 1800);
+  }
 }
 
 function setBtnLoading(btn, loading) {
