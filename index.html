@@ -192,7 +192,46 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .repaso-add{width:14px;height:14px;border-radius:50%;background:transparent;border:1.5px dashed var(--ink3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:9px;color:var(--ink3);transition:all .12s;flex-shrink:0;}
 .repaso-add:hover{background:var(--bg2);border-color:var(--ink2);color:var(--ink);}
 
-@media(max-width:680px){.shell{grid-template-columns:1fr;}.sidebar{position:static;height:auto;}}
+/* ── HAMBURGER ── */
+#hamburger-btn{display:none;background:none;border:1px solid var(--line);color:var(--ink2);width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:18px;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;touch-action:manipulation;}
+.sidebar-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:199;display:none;}
+.sidebar-backdrop.show{display:block;}
+
+/* ── MOBILE BANNER ── */
+#mobile-banner{display:none;position:fixed;top:0;left:0;right:0;z-index:400;background:#252320;color:#C5C2B8;font-family:'DM Mono',monospace;font-size:11px;padding:9px 16px;align-items:center;justify-content:space-between;gap:8px;letter-spacing:.03em;}
+
+/* ── WORD COUNT HINT ── */
+#word-count-hint{font-size:10px;color:#6A6760;font-family:'DM Mono',monospace;text-align:center;margin-bottom:8px;letter-spacing:.04em;min-height:16px;transition:color .2s;}
+#word-count-hint.complete{color:#2E7D5A;}
+
+@media(max-width:767px){
+  #hamburger-btn{display:flex;}
+  .shell{grid-template-columns:1fr;}
+  .sidebar{position:fixed;top:0;left:-290px;width:280px;height:100vh;z-index:200;transition:left .25s ease;}
+  .sidebar.open{left:0;}
+  .main{padding:16px 14px;}
+  .main-header{display:flex;align-items:flex-start;gap:10px;margin-bottom:16px;}
+  .main-header > .mh-text{flex:1;}
+  .main-header h2{font-size:17px;}
+  .study-bar{flex-direction:column;align-items:flex-start;gap:8px;padding:10px 12px;}
+  .streak-block{padding-right:0;border-right:none;padding-bottom:8px;border-bottom:1px solid var(--line);width:100%;}
+  .cal-day{min-height:52px;padding:3px 2px;}
+  .day-tag{font-size:7px;padding:1px 3px;}
+  .repaso-table th:nth-child(2),.repaso-table td:nth-child(2){display:none;}
+  .modal-bg{padding:12px 8px 20px;}
+  .modal{padding:16px;}
+  /* iOS: prevent zoom on input focus */
+  .linput,.sfield input,.sfield select,.subj-setup-row input,.stema-area,.modal-note textarea{font-size:16px!important;}
+  /* Remove 300ms tap delay */
+  button,a{touch-action:manipulation;}
+}
+
+@media(min-width:768px) and (max-width:1024px){
+  .shell{grid-template-columns:220px 1fr;}
+  .sidebar{padding:18px 12px;}
+  .cal-day{min-height:70px;}
+  .main{padding:20px 18px;}
+}
 
 /* ── STUDY BAR (racha + frase) ── */
 .study-bar{display:flex;align-items:center;gap:16px;background:white;border:1px solid var(--line);border-radius:10px;padding:12px 16px;margin-bottom:18px;}
@@ -251,6 +290,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 </head>
 <body>
 
+<!-- ═══════════ MOBILE BANNER ═══════════ -->
+<div id="mobile-banner">
+  <span>📱 Para mejor experiencia, usa un ordenador</span>
+  <button onclick="document.getElementById('mobile-banner').style.display='none'" style="background:none;border:none;color:#6A6760;font-size:18px;cursor:pointer;padding:0;line-height:1;flex-shrink:0;touch-action:manipulation;">✕</button>
+</div>
+
 <!-- ═══════════ BOOT LOADER ═══════════ -->
 <div id="boot-loader">
   <div class="boot-logo">Planificador de exámenes</div>
@@ -291,6 +336,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
       placeholder="palabra1-palabra2-palabra3-palabra4"
       autocomplete="off" autocorrect="off" spellcheck="false"
       onkeydown="if(event.key==='Enter') doLogin()"/>
+    <div id="word-count-hint"></div>
     <div id="login-error" class="lerrmsg hidden"></div>
     <button class="lbtn-primary" onclick="doLogin()">Entrar →</button>
   </div>
@@ -349,8 +395,11 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 
   <main class="main">
     <div class="main-header">
-      <h2 id="main-title">Calendario de estudio</h2>
-      <p>Clic en un día para editar · Marca temas en la barra lateral · Los repasos se registran en la tabla</p>
+      <button id="hamburger-btn" onclick="openSidebar()" title="Menú">☰</button>
+      <div class="mh-text">
+        <h2 id="main-title">Calendario de estudio</h2>
+        <p>Clic en un día para editar · Marca temas en la barra lateral · Los repasos se registran en la tabla</p>
+      </div>
     </div>
     <!-- STUDY BAR -->
     <div class="study-bar">
@@ -391,6 +440,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
     </div>
   </main>
 </div>
+
+<div class="sidebar-backdrop" id="sidebar-backdrop" onclick="closeSidebar()"></div>
 
 <!-- MODAL -->
 <div class="modal-bg" id="modal-bg">
@@ -1259,6 +1310,55 @@ window.toggleDayPlan=toggleDayPlan;
 window.setExamBtn=setExamBtn;
 window.openSetupFromSidebar=openSetupFromSidebar;
 window.setupRows=setupRows;
+
+// ─── MOBILE ───
+function openSidebar() {
+  document.querySelector('.sidebar').classList.add('open');
+  document.getElementById('sidebar-backdrop').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sidebar-backdrop').classList.remove('show');
+  document.body.style.overflow = '';
+}
+window.openSidebar = openSidebar;
+window.closeSidebar = closeSidebar;
+
+// Show mobile banner
+if (window.innerWidth <= 767) {
+  document.getElementById('mobile-banner').style.display = 'flex';
+}
+
+// Login input: auto-hyphen on space + word count
+(function() {
+  const inp = document.getElementById('login-input');
+  const hint = document.getElementById('word-count-hint');
+
+  function updateCount(val) {
+    if (!val) { hint.textContent = ''; hint.classList.remove('complete'); return; }
+    const words = val.split('-').filter(w => w.length > 0);
+    const n = Math.min(words.length, 4);
+    hint.textContent = `${n} de 4 palabras`;
+    hint.classList.toggle('complete', n >= 4);
+  }
+
+  inp.addEventListener('keydown', function(e) {
+    if (e.key === ' ') {
+      e.preventDefault();
+      const v = this.value;
+      const sel = this.selectionStart;
+      const parts = v.split('-').filter(Boolean);
+      if (parts.length < 4 && v.length > 0 && !v.endsWith('-')) {
+        this.value = v.slice(0, sel) + '-' + v.slice(sel);
+        this.setSelectionRange(sel + 1, sel + 1);
+        updateCount(this.value);
+      }
+    }
+  });
+
+  inp.addEventListener('input', function() { updateCount(this.value); });
+})();
 
 // ─── FRASES MOTIVACIONALES ───
 const QUOTES = [
