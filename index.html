@@ -324,25 +324,39 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
       <p>Tu calendario de estudio</p>
     </div>
 
-    <div class="lsection-label">Crear cuenta nueva</div>
-    <div class="words-box" id="new-words">cargando…</div>
-    <div class="words-btns">
-      <button class="lbtn-ghost" onclick="regenerateWords()">↺ Regenerar</button>
-      <button class="lbtn-ghost" onclick="copyWords()">⧉ Copiar</button>
-    </div>
-    <div class="warn-box">Guarda estas palabras. Son tu única contraseña y <strong>no se pueden recuperar</strong>. Quien las tenga puede acceder a tu cuenta.</div>
-    <button class="lbtn-primary" onclick="doRegister()">Crear cuenta con estas palabras →</button>
+    <form id="register-form" autocomplete="on" onsubmit="event.preventDefault(); doRegister()">
+      <input type="text" name="username" autocomplete="username" id="reg-username-field"
+             style="position:fixed;top:-9999px;opacity:0;pointer-events:none;" tabindex="-1" aria-hidden="true">
+      <input type="password" name="password" autocomplete="new-password" id="reg-pw-field"
+             style="position:fixed;top:-9999px;opacity:0;pointer-events:none;" tabindex="-1" aria-hidden="true">
+      <div class="lsection-label">Crear cuenta nueva</div>
+      <div class="words-box" id="new-words">cargando…</div>
+      <div class="words-btns">
+        <button type="button" class="lbtn-ghost" onclick="regenerateWords()">↺ Regenerar</button>
+        <button type="button" class="lbtn-ghost" onclick="copyWords()">⧉ Copiar</button>
+      </div>
+      <div class="warn-box">Guarda estas palabras. Son tu única contraseña y <strong>no se pueden recuperar</strong>. Quien las tenga puede acceder a tu cuenta.</div>
+      <button type="submit" class="lbtn-primary">Crear cuenta con estas palabras →</button>
+    </form>
 
     <div class="lsep"><span>o si ya tienes cuenta</span></div>
 
-    <div class="lsection-label">Acceder</div>
-    <input type="text" class="linput" id="login-input"
-      placeholder="palabra1-palabra2-palabra3-palabra4"
-      autocomplete="off" autocorrect="off" spellcheck="false"
-      onkeydown="if(event.key==='Enter') doLogin()"/>
-    <div id="word-count-hint"></div>
-    <div id="login-error" class="lerrmsg hidden"></div>
-    <button class="lbtn-primary" onclick="doLogin()">Entrar →</button>
+    <form id="login-form" autocomplete="on" onsubmit="event.preventDefault(); doLogin()">
+      <input type="text" name="username" autocomplete="username" id="login-username-field"
+             style="position:fixed;top:-9999px;opacity:0;pointer-events:none;" tabindex="-1" aria-hidden="true">
+      <div class="lsection-label">Acceder</div>
+      <div style="position:relative;">
+        <input type="password" class="linput" id="login-input" name="password"
+          placeholder="palabra1-palabra2-palabra3-palabra4"
+          autocomplete="current-password" autocorrect="off" spellcheck="false"
+          style="padding-right:44px;"/>
+        <button type="button" id="login-eye" onclick="toggleLoginVisibility()"
+          style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#6A6760;font-size:15px;padding:4px;line-height:1;">👁</button>
+      </div>
+      <div id="word-count-hint"></div>
+      <div id="login-error" class="lerrmsg hidden"></div>
+      <button type="submit" class="lbtn-primary">Entrar →</button>
+    </form>
   </div>
 </div>
 
@@ -608,7 +622,12 @@ function regenerateWords() {
     const i = Math.floor(Math.random() * pool.length);
     currentWords.push(pool.splice(i,1)[0]);
   }
-  $('new-words').textContent = currentWords.join('-');
+  const w = currentWords.join('-');
+  $('new-words').textContent = w;
+  // Populate hidden fields so password managers can detect and offer to save
+  const regPw = $('reg-pw-field'), regUser = $('reg-username-field');
+  if (regPw) regPw.value = w;
+  if (regUser) regUser.value = w;
 }
 
 function copyWords() {
@@ -627,7 +646,7 @@ function setBtnLoading(btn, loading) {
 }
 
 async function doRegister() {
-  const btn = document.querySelector('#login-screen .lbtn-primary');
+  const btn = document.querySelector('#register-form .lbtn-primary');
   setBtnLoading(btn, true);
   const words = currentWords.join('-');
   const userId = await hashWords(words);
@@ -653,8 +672,7 @@ async function doLogin() {
     errEl.classList.remove('hidden');
     return;
   }
-  const btns = document.querySelectorAll('#login-screen .lbtn-primary');
-  const btn = btns[btns.length-1];
+  const btn = document.querySelector('#login-form .lbtn-primary');
   setBtnLoading(btn, true);
   const userId = await hashWords(input);
   try {
@@ -667,6 +685,9 @@ async function doLogin() {
       setBtnLoading(btn, false);
       return;
     }
+    // Populate username field so browser password manager offers to save
+    const uf = $('login-username-field');
+    if (uf) uf.value = input;
     localStorage.setItem('pex_user', JSON.stringify({words:input,userId}));
     await loadUserData(userId);
     if (CFG.subjects && CFG.subjects.length > 0) { showApp(); } else { showSetup(); }
@@ -1461,6 +1482,12 @@ window.toggleModalSec=toggleModalSec;
 window.toggleDayPlan=toggleDayPlan;
 window.setExamBtn=setExamBtn;
 window.openSetupFromSidebar=openSetupFromSidebar;
+window.toggleLoginVisibility = function() {
+  const inp = $('login-input'), btn = $('login-eye');
+  const isHidden = inp.type === 'password';
+  inp.type = isHidden ? 'text' : 'password';
+  btn.textContent = isHidden ? '🙈' : '👁';
+};
 window.toggleShowWords=toggleShowWords;
 window.copySessionWords=copySessionWords;
 window.setupRows=setupRows;
