@@ -1,0 +1,70 @@
+export const WORDS = [
+  // Animales
+  'gato','perro','pato','lobo','oso','toro','mono','pez','rana','topo',
+  'lince','ciervo','zorro','aguila','buho','cobra','tigre','cebra','puma',
+  'nutria','castor','cabra','oveja','burro','caballo','vaca','cerdo','gallo',
+  'pavo','conejo','ardilla','murcielago','delfin','ballena','tiburon','pulpo',
+  'cangrejo','tortuga','iguana','lagarto','serpiente','loro','paloma','cuervo',
+  'golondrina','colibrí','tucán','flamenco','pingüino','koala','panda','jaguar',
+  'leopardo','guepardo','hiena','mapache','marmota','tejón','erizo','topo',
+  // Naturaleza
+  'arbol','flor','rio','mar','lago','monte','roca','nube','sol','luna',
+  'nieve','lluvia','viento','fuego','tierra','piedra','arena','barro','musgo',
+  'helecho','roble','pino','cedro','sauce','palmera','cactus','rosa','tulipan',
+  'margarita','lirio','clavel','jazmin','lavanda','hiedra','raiz','rama','hoja',
+  'fruto','semilla','bosque','selva','pradera','desierto','glaciar','volcan',
+  'cueva','colina','valle','llano','pantano','arrecife','costa','playa','acantilado',
+  'cascada','manantial','laguna','oceano','tormenta','niebla','escarcha','rocio',
+  // Alimentos
+  'pan','leche','queso','huevo','carne','pollo','pescado','arroz','pasta',
+  'sopa','ensalada','tomate','cebolla','ajo','zanahoria','patata','pepino',
+  'limon','naranja','manzana','pera','uva','fresa','melon','sandia','cereza',
+  'ciruela','mango','platano','kiwi','higo','nuez','almendra','avellana',
+  'cafe','te','agua','zumo','vino','cerveza','miel','azucar','sal','pimienta',
+  'canela','oregano','perejil','cilantro','albahaca','pimiento','berenjena',
+  'calabaza','lechuga','espinaca','brocoli','coliflor','maiz','judía','lenteja',
+  'garbanzo','atun','salmon','bacalao','calamares','gambas','mejillon',
+  // Objetos del hogar
+  'mesa','silla','cama','sofa','lampara','puerta','ventana','suelo','techo',
+  'pared','espejo','cuadro','reloj','libro','lapiz','papel','sobre','caja',
+  'bolsa','botella','vaso','taza','plato','olla','sarten','cuchillo','tenedor',
+  'cuchara','escoba','fregona','trapo','jabon','toalla','almohada','manta',
+  'colcha','cortina','alfombra','estante','armario','cajón','llave','cerrojo',
+  'bombilla','enchufe','cable','mando','pantalla','teclado','raton','agenda',
+  // Ropa
+  'camisa','pantalon','falda','vestido','abrigo','chaqueta','jersey','camiseta',
+  'calcetines','zapatos','botas','zapatillas','sandalias','cinturon','bufanda',
+  'gorro','guantes','pañuelo','bolsillo','cremallera','boton','costura',
+  // Herramientas y objetos
+  'martillo','clavo','tornillo','tuerca','llave','sierra','taladro','pincel',
+  'brocha','cubo','paleta','esponja','tijeras','aguja','hilo','cuerda','cadena',
+  'candado','escalera','rueda','polea','palanca','barril','cesta','saco',
+  // Transporte
+  'coche','moto','bici','barco','tren','avion','bus','metro','camion','taxi',
+  'mapa','ruta','puente','tunel','carretera','camino','sendero','puerto',
+  'aeropuerto','estacion','anden','semaforo','rotonda','curva','cuesta',
+  // Geografía y lugares
+  'campo','ciudad','pueblo','barrio','plaza','parque','jardin','patio','balcon',
+  'tejado','sotano','pasillo','cocina','salon','dormitorio','bano','terraza',
+  'garaje','almacen','tienda','mercado','banco','colegio','hospital','iglesia',
+  'castillo','torre','muralla','faro','molino','granero','pozo','fuente',
+  // Cuerpo humano
+  'mano','pie','cabeza','cara','ojo','nariz','boca','oreja','cuello','hombro',
+  'brazo','codo','muneca','dedo','pecho','espalda','cadera','rodilla','tobillo',
+  'pelo','frente','mejilla','barba','bigote','lengua','diente','labio','nuca',
+  // Colores y formas
+  'rojo','verde','azul','blanco','negro','gris','rosa','morado','naranja',
+  'marron','dorado','plateado','circulo','cuadro','triangulo','linea','punto',
+  // Otros sustantivos concretos
+  'carta','mapa','foto','dibujo','museo','teatro','cine','radio','telón',
+  'moneda','billete','sello','sobre','paquete','regalo','bote','frasco',
+  'tubo','varilla','bloque','placa','tabla','tablón','ladrillo','teja',
+  'vidrio','cristal','metal','cobre','hierro','madera','plastico','tela',
+  'piel','cuero','lana','seda','algodon','cartón','goma','corcho',
+  'vela','cerilla','linterna','antorcha','hoguera','humo','ceniza',
+  'lodo','polvo','grava','miga','gota','ola','burbuja','espuma',
+  'coche','globo','cometa','pelota','dado','ficha','carta','pieza',
+  'lienzo','marco','vitrina','urna','cofre','baul','maleta','mochila',
+  'bolso','cartera','monedero','broche','anillo','collar','pulsera',
+  'medalla','escudo','bandera','sello','firma','huella','rastro','señal',
+];
