@@ -1653,7 +1653,7 @@ function animateLogo() {
   function cycleSequences() {
     if (si >= LOGO_SEQUENCES.length) { scrambleReveal(h1, finalTitle); return; }
     h1.textContent = LOGO_SEQUENCES[si++];
-    setTimeout(cycleSequences, 220);
+    setTimeout(cycleSequences, 420);
   }
 
   function scrambleReveal(el, target) {
@@ -1666,7 +1666,7 @@ function animateLogo() {
         return SCRAMBLE_POOL[Math.floor(Math.random() * SCRAMBLE_POOL.length)];
       }).join('');
       frame++;
-      if (frame % 3 === 0 && revealed < chars.length) revealed++;
+      if (frame % 7 === 0 && revealed < chars.length) revealed++;
       if (revealed < chars.length) { requestAnimationFrame(tick); return; }
       el.textContent = target;
       // Reveal subtitle
