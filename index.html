@@ -345,6 +345,16 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 <!-- ═══════════ SETUP ═══════════ -->
 <div id="setup-screen" class="hidden">
   <div class="scard">
+    <div id="import-banner" style="background:var(--bg);border:1.5px dashed var(--line);border-radius:8px;padding:12px 14px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+      <div>
+        <div style="font-size:12px;font-weight:500;color:var(--ink);margin-bottom:2px;">¿Tienes el archivo HTML del planificador anterior?</div>
+        <div style="font-size:11px;color:var(--ink3);">Importa asignaturas, temas, fechas y calendario en un clic</div>
+      </div>
+      <label id="import-label" style="font-size:11px;font-weight:500;color:var(--accent);cursor:pointer;white-space:nowrap;padding:7px 13px;border:1px solid var(--accent);border-radius:5px;transition:all .15s;flex-shrink:0;">
+        Importar HTML →
+        <input type="file" accept=".html" style="display:none" onchange="handleImportFile(this)">
+      </label>
+    </div>
     <h1>Configuración inicial</h1>
     <p class="sub">Cuéntanos sobre tu convocatoria para preparar el calendario.</p>
 
@@ -797,9 +807,117 @@ function finishSetup() {
       temas: r.temas.split('\n').map(t=>t.trim()).filter(Boolean),
     })),
   };
+  // Apply imported plan calendar if available
+  if (_importedPlan) {
+    Object.entries(_importedPlan).forEach(([date, dayData]) => { S.plan[date] = dayData; });
+    _importedPlan = null;
+  }
   saveAll();
   showApp();
 }
+
+// ─── IMPORT FROM PROTOTYPE HTML ───
+let _importedPlan = null;
+
+function handleImportFile(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const lbl = document.getElementById('import-label');
+  lbl.textContent = 'Leyendo…';
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const result = parsePrototypeHTML(e.target.result);
+      if (!result || !result.subjects.length) {
+        lbl.innerHTML = '⚠ No se reconoció el archivo<input type="file" accept=".html" style="display:none" onchange="handleImportFile(this)">';
+        return;
+      }
+      const { subjects, plan, name, startDate, endDate } = result;
+      // Fill form
+      setupRows.length = 0;
+      $('s-subjects').innerHTML = '';
+      if (name) $('s-name').value = name;
+      if (startDate) $('s-start').value = startDate;
+      if (endDate) $('s-end').value = endDate;
+      subjects.forEach(s => addSetupSubject(s));
+      if (plan && Object.keys(plan).length > 0) _importedPlan = plan;
+      // Success feedback
+      const banner = document.getElementById('import-banner');
+      banner.style.borderColor = '#2E7D5A';
+      banner.style.background = '#EDF7F2';
+      banner.innerHTML = `<div style="font-size:12px;color:#2E7D5A;font-weight:500;">✓ Importadas ${subjects.length} asignaturas${_importedPlan ? ' y ' + Object.keys(_importedPlan).length + ' días de calendario' : ''}. Revisa y haz clic en Empezar.</div>`;
+    } catch(err) {
+      console.error('Import error:', err);
+      lbl.innerHTML = '⚠ Error al leer<input type="file" accept=".html" style="display:none" onchange="handleImportFile(this)">';
+    }
+    input.value = '';
+  };
+  reader.onerror = () => { lbl.textContent = '⚠ Error'; };
+  reader.readAsText(file, 'UTF-8');
+}
+
+function parsePrototypeHTML(html) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  let scriptText = '';
+  doc.querySelectorAll('script').forEach(s => { scriptText += s.textContent + '\n'; });
+  if (!scriptText.includes('SUBJECTS')) return null;
+
+  const rawSubjects = extractJSObject(scriptText, 'SUBJECTS');
+  if (!rawSubjects) return null;
+  const rawPlan = extractJSObject(scriptText, 'PLAN_DEFAULT');
+
+  // Extract user name from title
+  const titleSpan = doc.querySelector('.sidebar h1 span, h1 span');
+  const titleText = titleSpan ? titleSpan.textContent.trim() : '';
+  const namePart = titleText.split(/[·\u00B7]/)[0].trim();
+  const name = (namePart && !/^\d{4}$/.test(namePart)) ? namePart : '';
+
+  // Date range from plan
+  let startDate = '', endDate = '';
+  if (rawPlan) {
+    const dates = Object.keys(rawPlan).sort();
+    if (dates.length) { startDate = dates[0]; endDate = dates[dates.length - 1]; }
+  }
+  // Or from subjects exam dates
+  if (!endDate && rawSubjects) {
+    const examDates = Object.values(rawSubjects).map(s => s.examDate).filter(Boolean).sort();
+    if (examDates.length) endDate = examDates[examDates.length - 1];
+  }
+
+  const subjects = Object.entries(rawSubjects).map(([key, subj]) => ({
+    id: key,
+    name: subj.name || key,
+    short: subj.short || key,
+    color: subj.color || '#4A4A4A',
+    bg: subj.bg || '#F2F2F2',
+    examDate: subj.examDate || '',
+    temas: Array.isArray(subj.temas) ? subj.temas : [],
+  }));
+
+  return { subjects, plan: rawPlan, name, startDate, endDate };
+}
+
+function extractJSObject(scriptText, varName) {
+  // Find "const/var/let VARNAME = {"
+  const match = scriptText.match(new RegExp(`(?:const|var|let)\\s+${varName}\\s*=\\s*\\{`));
+  if (!match) return null;
+  const braceStart = scriptText.indexOf(match[0]) + match[0].length - 1;
+  let depth = 0, i = braceStart;
+  while (i < scriptText.length) {
+    if (scriptText[i] === '{') depth++;
+    else if (scriptText[i] === '}') { depth--; if (depth === 0) break; }
+    i++;
+  }
+  try {
+    return new Function(`return ${scriptText.slice(braceStart, i + 1)}`)();
+  } catch(e) {
+    console.warn(`Could not parse ${varName}:`, e);
+    return null;
+  }
+}
+
+window.handleImportFile = handleImportFile;
 
 // ─── APP INIT ───
 let openSubjects = new Set();
