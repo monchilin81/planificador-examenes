@@ -712,6 +712,14 @@ function showLogin() {
   $('login-screen').classList.remove('hidden');
   $('setup-screen').classList.add('hidden');
   $('app-screen').classList.add('hidden');
+  // Reset any button loading states left from a previous session
+  const regBtn = document.querySelector('#register-form .lbtn-primary');
+  const loginBtn = document.querySelector('#login-form .lbtn-primary');
+  if (regBtn) { regBtn.disabled = false; regBtn.textContent = 'Crear cuenta con estas palabras →'; }
+  if (loginBtn) { loginBtn.disabled = false; loginBtn.textContent = 'Entrar →'; }
+  $('login-input').value = '';
+  $('word-count-hint').textContent = '';
+  $('login-error').classList.add('hidden');
   regenerateWords();
 }
 
