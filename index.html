@@ -920,22 +920,24 @@ function buildCalendar() {
       const dd = S.plan[ds]||{tags:[]};
       const dow = new Date(year,month,d).getDay();
       const isWe=dow===0||dow===6, isToday=ds===tday, isViaje=dd.viaje;
-      // Auto-detectar examen desde la config de asignaturas aunque no esté marcado manualmente
-      const autoExamKey = Object.entries(SUBJECTS).find(([k,s])=>s.examDate===ds)?.[0];
-      const ek = dd.exam || autoExamKey || null;
+      // ek: solo el examen guardado explícitamente → controla borde y clase exam-day
+      const ek = (dd.exam && SUBJECTS[dd.exam]) ? dd.exam : null;
+      // displayExam: ek + autodetección por fecha → controla el tag visible en la celda
+      const autoExamKey = Object.entries(SUBJECTS).find(([k,s])=>s.examDate && s.examDate===ds)?.[0] || null;
+      const displayExam = ek || autoExamKey;
       const note=S.notes[ds];
       const cell=document.createElement('div');
       cell.className=`cal-day${isToday?' today':''}${isViaje?' viaje':''}${isWe&&!isViaje?' weekend':''}${ek?' exam-day':''}`;
-      if(ek&&SUBJECTS[ek]) cell.style.borderColor=SUBJECTS[ek].color;
+      if(ek) cell.style.borderColor=SUBJECTS[ek].color;
       const num=document.createElement('div');num.className='day-num';num.textContent=d;cell.appendChild(num);
       const tags=document.createElement('div');tags.className='day-tags';
       if(isViaje){
         const t=document.createElement('div');t.className='day-tag';t.style.cssText='background:#E8E5F5;color:#4A3B8C;';t.textContent='✈ Viaje';tags.appendChild(t);
-      } else if(ek&&SUBJECTS[ek]){
-        const s=SUBJECTS[ek],t=document.createElement('div');
+      } else if(displayExam&&SUBJECTS[displayExam]){
+        const s=SUBJECTS[displayExam],t=document.createElement('div');
         t.className='day-tag';t.style.cssText=`background:${s.color};color:white;font-weight:700;`;
         t.textContent=`📝 ${s.short.toUpperCase()}`;tags.appendChild(t);
-        (dd.tags||[]).filter(k=>k!==ek).forEach(k=>{
+        (dd.tags||[]).filter(k=>k!==displayExam).forEach(k=>{
           if(!SUBJECTS[k])return;
           const sg=SUBJECTS[k],tg=document.createElement('div');
           tg.className='day-tag';tg.style.cssText=`background:${sg.bg};color:${sg.color};`;
@@ -1337,8 +1339,7 @@ function checkAndUpdateStreak() {
     S.streak.count = 1; // racha rota o primera vez
   }
   S.streak.lastDate = today;
-  saveAll();
-  renderStreak();
+  renderStreak(); // solo actualiza UI, el caller hace saveAll
 }
 
 function renderStreak() {
