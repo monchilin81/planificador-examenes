@@ -2,12 +2,16 @@ import express from 'express';
 import cors from 'cors';
 import { createClient } from '@libsql/client';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
 dotenv.config();
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.'));
+app.use(express.static(__dirname));
 
 const db = createClient({
   url: process.env.TURSO_URL,
