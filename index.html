@@ -114,12 +114,12 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--ink);min-
 .cal-day{background:white;border:1px solid var(--line);border-radius:7px;min-height:84px;padding:5px 4px;position:relative;transition:border-color .15s,box-shadow .15s;cursor:pointer;}
 .cal-day:hover{border-color:var(--ink3);box-shadow:0 2px 8px rgba(0,0,0,.06);}
 .cal-day.empty{background:transparent;border-color:transparent;cursor:default;pointer-events:none;}
-.cal-day.today{border-color:var(--accent)!important;border-width:2px;}
+.cal-day.today{background:#FEF7F5!important;}
 .cal-day.viaje{background:#F0EEF9;border-color:#C5BCE8;}
 .cal-day.weekend{background:#FAFAF7;}
 .cal-day.exam-day{border-width:2px;}
 .day-num{font-family:'DM Mono',monospace;font-size:10px;font-weight:500;color:var(--ink2);margin-bottom:3px;}
-.cal-day.today .day-num{color:var(--accent);}
+.cal-day.today .day-num{color:var(--accent);font-weight:700;}
 .day-tags{display:flex;flex-direction:column;gap:2px;}
 .day-tag{font-size:8px;font-weight:500;padding:2px 4px;border-radius:3px;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .day-edit-btn{position:absolute;bottom:4px;right:4px;width:15px;height:15px;border-radius:3px;border:1px solid var(--line);background:transparent;font-size:9px;cursor:pointer;color:var(--ink3);display:flex;align-items:center;justify-content:center;transition:all .15s;}
@@ -1017,10 +1017,12 @@ function buildCalendar() {
 
 // ─── MODAL ───
 let modalDate = null;
+let openModalSecs = new Set();
 
 function openModal(ds,day,month) {
   // Resetear estado pendiente y limpiar DOM residual de aperturas anteriores
   _pendingExam = null;
+  openModalSecs.clear();
   const old = document.getElementById('modal-exam-row');
   if (old) old.remove();
 
@@ -1130,11 +1132,14 @@ function refreshModalTemas() {
         <div class="mts-chev">▶</div>
       </div>
       <div class="modal-tema-rows">${rows}</div>`;
+    // Restore open state after rebuild
+    if (openModalSecs.has(key)) sec.classList.add('open');
     area.appendChild(sec);
   });
 }
 
 function toggleModalSec(key) {
+  if (openModalSecs.has(key)) openModalSecs.delete(key); else openModalSecs.add(key);
   const sec = document.querySelector(`.modal-tema-sec[data-key="${key}"]`);
   if (sec) sec.classList.toggle('open');
 }
@@ -1147,17 +1152,10 @@ function toggleDayPlan(key,idx) {
   const pos = arr.indexOf(idx);
   if (pos>=0) arr.splice(pos,1); else arr.push(idx);
   saveAll();
-  const row=document.getElementById(`mtrp-${key}-${idx}`);
-  if (row) {
-    const planned=arr.includes(idx);
-    row.style.background=planned?'#EDF7F2':'';
-    row.style.borderLeft=planned?'3px solid #2E7D5A':'3px solid transparent';
-    const badge=row.querySelector('div:last-child');
-    if(badge){badge.textContent=planned?'📌 hoy':'';badge.style.fontWeight=planned?'500':'400';}
-  }
+  refreshModalTemas();
 }
 
-function closeModal() { $('modal-bg').classList.remove('open'); modalDate=null; _pendingExam=null; }
+function closeModal() { $('modal-bg').classList.remove('open'); modalDate=null; _pendingExam=null; openModalSecs.clear(); }
 
 function saveModal() {
   if (!modalDate) return;
