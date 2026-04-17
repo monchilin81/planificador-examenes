@@ -966,8 +966,18 @@ function buildCalendar() {
 let modalDate = null;
 
 function openModal(ds,day,month) {
+  // Resetear estado pendiente y limpiar DOM residual de aperturas anteriores
+  _pendingExam = null;
+  const old = document.getElementById('modal-exam-row');
+  if (old) old.remove();
+
   modalDate = ds;
   const dd = S.plan[ds]||{tags:[]};
+
+  // El examen activo: guardado manualmente > autodetectado desde config
+  const autoExamKey = Object.entries(SUBJECTS).find(([k,s])=>s.examDate===ds)?.[0] || '';
+  const activeExam = dd.exam || autoExamKey;
+
   $('modal-title').textContent = `${day} de ${MNAMES[month]}`;
   $('modal-date-lbl').textContent = ds;
   $('modal-note').value = S.notes[ds]||'';
@@ -976,14 +986,14 @@ function openModal(ds,day,month) {
   $('modal-viaje').onchange = () => {
     $('modal-normal-section').style.display = $('modal-viaje').checked ? 'none' : '';
   };
+
   const btns = $('modal-subj-btns'); btns.innerHTML = '';
   Object.entries(SUBJECTS).forEach(([key,subj]) => {
     const active = (dd.tags||[]).includes(key);
-    const isExam = dd.exam===key;
     const btn = document.createElement('button');
     btn.className = 'modal-subj-btn'+(active?' active':'');
     btn.style.cssText = `color:${subj.color};border-color:${subj.color};background:${active?subj.bg:'white'};`;
-    btn.textContent = isExam ? `📝 ${subj.short}` : subj.short;
+    btn.textContent = subj.short;
     btn.dataset.key = key;
     btn.onclick = () => {
       btn.classList.toggle('active');
@@ -992,24 +1002,30 @@ function openModal(ds,day,month) {
     };
     btns.appendChild(btn);
   });
-  // exam marker buttons
+
+  // Selector de examen — un único div con id para evitar duplicados
   const examDiv = document.createElement('div');
+  examDiv.id = 'modal-exam-row';
   examDiv.style.cssText = 'margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;';
-  examDiv.innerHTML = `<span style="font-size:10px;color:var(--ink3);font-family:'DM Mono',monospace">EXAMEN EN ESTE DÍA:</span>`;
+  examDiv.innerHTML = `<span style="font-size:10px;color:var(--ink3);font-family:'DM Mono',monospace;white-space:nowrap">EXAMEN:</span>`;
+
   const noExam = document.createElement('button');
-  noExam.className = 'modal-subj-btn' + (!dd.exam?' active':'');
-  noExam.style.cssText = `color:var(--ink3);border-color:var(--line);background:${!dd.exam?'var(--bg2)':'white'};`;
+  noExam.className = 'modal-subj-btn' + (!activeExam ? ' active' : '');
+  noExam.style.cssText = `color:var(--ink3);border-color:var(--line);background:${!activeExam?'var(--bg2)':'white'};`;
   noExam.textContent = 'Ninguno'; noExam.dataset.examkey = '';
   noExam.onclick = () => setExamBtn('');
   examDiv.appendChild(noExam);
+
   Object.entries(SUBJECTS).forEach(([key,subj]) => {
     const eb = document.createElement('button');
-    eb.className = 'modal-subj-btn' + (dd.exam===key?' active':'');
-    eb.style.cssText = `color:${subj.color};border-color:${subj.color};background:${dd.exam===key?subj.bg:'white'};`;
+    const isActive = activeExam === key;
+    eb.className = 'modal-subj-btn' + (isActive?' active':'');
+    eb.style.cssText = `color:${subj.color};border-color:${subj.color};background:${isActive?subj.bg:'white'};`;
     eb.textContent = subj.short; eb.dataset.examkey = key;
     eb.onclick = () => setExamBtn(key);
     examDiv.appendChild(eb);
   });
+
   btns.parentNode.insertBefore(examDiv, btns.nextSibling);
   refreshModalTemas();
   $('modal-bg').classList.add('open');
